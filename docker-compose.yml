@@ -1,0 +1,156 @@
+name: smart-farmland
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: ${POSTGRES_USER:-smart_farmland}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in smart-farmland/.env}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - db.adminCommand('ping').ok
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  auth-service:
+    build:
+      context: ../smart-farmland-auth-service
+      dockerfile: apps/auth-service/Dockerfile
+    environment:
+      SQLALCHEMY_DATABASE_URL: ${SQLALCHEMY_DATABASE_URL:?Set SQLALCHEMY_DATABASE_URL in smart-farmland/.env}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in smart-farmland/.env}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in smart-farmland/.env}
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50051
+      GRPC_REFLECTION: "false"
+    ports:
+      - "127.0.0.1:50051:50051"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import grpc; from grpc_health.v1 import health_pb2, health_pb2_grpc; c=grpc.insecure_channel('127.0.0.1:50051'); health_pb2_grpc.HealthStub(c).Check(health_pb2.HealthCheckRequest(), timeout=2); c.close()"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  telemetry-service:
+    build:
+      context: ../smart-farmland-telemetry-service
+      dockerfile: apps/telemetry-service/Dockerfile
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: telemetry
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50052
+      GRPC_REFLECTION: "false"
+    ports:
+      - "127.0.0.1:50052:50052"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import grpc; from grpc_health.v1 import health_pb2, health_pb2_grpc; c=grpc.insecure_channel('127.0.0.1:50052'); health_pb2_grpc.HealthStub(c).Check(health_pb2.HealthCheckRequest(), timeout=2); c.close()"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  bi-service:
+    build:
+      context: ../smart-farmland-bi-service
+      dockerfile: apps/bi-service/Dockerfile
+    environment:
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: bi
+      GRPC_HOST: 0.0.0.0
+      GRPC_PORT: 50053
+      GRPC_REFLECTION: "false"
+      TELEMETRY_GRPC_TARGET: telemetry-service:50052
+    ports:
+      - "127.0.0.1:50053:50053"
+    depends_on:
+      mongo:
+        condition: service_healthy
+      telemetry-service:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import grpc; from grpc_health.v1 import health_pb2, health_pb2_grpc; c=grpc.insecure_channel('127.0.0.1:50053'); health_pb2_grpc.HealthStub(c).Check(health_pb2.HealthCheckRequest(), timeout=2); c.close()"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  gateway:
+    build:
+      context: ../smart-farmland-api-gateway
+      dockerfile: apps/gateway/Dockerfile
+    environment:
+      HTTP_HOST: 0.0.0.0
+      HTTP_PORT: 8000
+      AUTH_GRPC_TARGET: auth-service:50051
+      TELEMETRY_GRPC_TARGET: telemetry-service:50052
+      BI_GRPC_TARGET: bi-service:50053
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      DEVICE_INGEST_TOKEN: ${DEVICE_INGEST_TOKEN:-}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      telemetry-service:
+        condition: service_healthy
+      bi-service:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  mongo_data:
+  postgres_data:
