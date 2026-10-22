@@ -1,0 +1,6 @@
+grpcio>=1.66
+grpcio-tools>=1.66
+grpcio-health-checking>=1.66
+grpcio-reflection>=1.66
+pymongo>=4.13
+python-dotenv>=1.0
