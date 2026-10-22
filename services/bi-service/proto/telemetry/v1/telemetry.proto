@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package telemetry.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// Telemetry service owns raw sensor readings. BI must not rewrite these records.
+service TelemetryService {
+  rpc IngestReading(IngestReadingRequest) returns (IngestReadingResponse);
+  rpc IngestBatch(IngestBatchRequest) returns (IngestBatchResponse);
+  rpc GetReading(GetReadingRequest) returns (Reading);
+  rpc ListReadings(ListReadingsRequest) returns (ListReadingsResponse);
+  rpc StreamReadings(ListReadingsRequest) returns (stream Reading);
+  rpc GetLatestReadings(GetLatestReadingsRequest) returns (GetLatestReadingsResponse);
+  rpc ListSensors(ListSensorsRequest) returns (ListSensorsResponse);
+  rpc UpsertSensor(UpsertSensorRequest) returns (Sensor);
+}
+
+message Measurement {
+  string metric = 1;
+  double value = 2;
+  string unit = 3;
+}
+
+message GeoPoint {
+  double x = 1;
+  double y = 2;
+  string unit = 3;
+}
+
+message ReadingInput {
+  string device_id = 1;
+  string sensor_id = 2;
+  google.protobuf.Timestamp recorded_at = 3;
+  repeated Measurement measurements = 4;
+  string source = 5;
+}
+
+message Reading {
+  string id = 1;
+  string device_id = 2;
+  string sensor_id = 3;
+  google.protobuf.Timestamp recorded_at = 4;
+  google.protobuf.Timestamp received_at = 5;
+  repeated Measurement measurements = 6;
+  string source = 7;
+}
+
+message Sensor {
+  string sensor_id = 1;
+  string device_id = 2;
+  string kind = 3;
+  GeoPoint location = 4;
+  google.protobuf.Timestamp last_recorded_at = 5;
+  repeated Measurement last_measurements = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message IngestReadingRequest {
+  ReadingInput reading = 1;
+}
+
+message IngestReadingResponse {
+  Reading reading = 1;
+  bool duplicate = 2;
+}
+
+message IngestBatchRequest {
+  repeated ReadingInput readings = 1;
+}
+
+message IngestBatchResponse {
+  int32 accepted = 1;
+  int32 duplicates = 2;
+  int32 rejected = 3;
+  repeated string errors = 4;
+}
+
+message GetReadingRequest {
+  string id = 1;
+}
+
+message ListReadingsRequest {
+  string device_id = 1;
+  string sensor_id = 2;
+  google.protobuf.Timestamp from_time = 3;
+  google.protobuf.Timestamp to_time = 4;
+  string metric = 5;
+  int32 page_size = 6;
+  string page_token = 7;
+}
+
+message ListReadingsResponse {
+  repeated Reading readings = 1;
+  string next_page_token = 2;
+  int32 page_size = 3;
+}
+
+message GetLatestReadingsRequest {
+  string device_id = 1;
+}
+
+message GetLatestReadingsResponse {
+  repeated Reading readings = 1;
+}
+
+message ListSensorsRequest {
+  string device_id = 1;
+}
+
+message ListSensorsResponse {
+  repeated Sensor sensors = 1;
+}
+
+message UpsertSensorRequest {
+  Sensor sensor = 1;
+}
