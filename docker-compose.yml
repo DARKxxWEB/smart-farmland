@@ -38,7 +38,7 @@ services:
 
   auth-service:
     build:
-      context: ../smart-farmland-auth-service
+      context: ./services/auth-service
       dockerfile: apps/auth-service/Dockerfile
     environment:
       SQLALCHEMY_DATABASE_URL: ${SQLALCHEMY_DATABASE_URL:?Set SQLALCHEMY_DATABASE_URL in smart-farmland/.env}
@@ -66,7 +66,7 @@ services:
 
   telemetry-service:
     build:
-      context: ../smart-farmland-telemetry-service
+      context: ./services/telemetry-service
       dockerfile: apps/telemetry-service/Dockerfile
     environment:
       MONGO_URI: mongodb://mongo:27017
@@ -92,7 +92,7 @@ services:
 
   bi-service:
     build:
-      context: ../smart-farmland-bi-service
+      context: ./services/bi-service
       dockerfile: apps/bi-service/Dockerfile
     environment:
       MONGO_URI: mongodb://mongo:27017
@@ -121,7 +121,7 @@ services:
 
   gateway:
     build:
-      context: ../smart-farmland-api-gateway
+      context: ./services/api-gateway
       dockerfile: apps/gateway/Dockerfile
     environment:
       HTTP_HOST: 0.0.0.0
