@@ -1,0 +1,138 @@
+syntax = "proto3";
+
+package bi.v1;
+
+import "google/protobuf/timestamp.proto";
+
+// BI owns derived analytics and reports. Raw readings stay in telemetry.
+service BIService {
+  rpc GetSummary(AnalyticsQuery) returns (SummaryResponse);
+  rpc GetTrends(TrendsRequest) returns (TrendsResponse);
+  rpc GetSensorStats(AnalyticsQuery) returns (SensorStatsResponse);
+  rpc GetAlerts(AnalyticsQuery) returns (AlertsResponse);
+  rpc GenerateReport(GenerateReportRequest) returns (Report);
+  rpc GetReport(GetReportRequest) returns (Report);
+  rpc ListReports(ListReportsRequest) returns (ListReportsResponse);
+}
+
+message AnalyticsQuery {
+  string device_id = 1;
+  string sensor_id = 2;
+  google.protobuf.Timestamp from_time = 3;
+  google.protobuf.Timestamp to_time = 4;
+}
+
+message MetricStats {
+  string metric = 1;
+  string unit = 2;
+  int64 count = 3;
+  double min = 4;
+  double max = 5;
+  double avg = 6;
+  double last = 7;
+}
+
+message SensorStats {
+  string sensor_id = 1;
+  string device_id = 2;
+  string kind = 3;
+  repeated MetricStats metrics = 4;
+  google.protobuf.Timestamp last_recorded_at = 5;
+}
+
+message SensorStatsResponse {
+  repeated SensorStats sensors = 1;
+}
+
+message SummaryResponse {
+  int64 reading_count = 1;
+  int32 sensor_count = 2;
+  int32 alert_count = 3;
+  google.protobuf.Timestamp from_time = 4;
+  google.protobuf.Timestamp to_time = 5;
+  repeated SensorStats sensors = 6;
+}
+
+message TrendPoint {
+  google.protobuf.Timestamp bucket_start = 1;
+  double avg = 2;
+  double min = 3;
+  double max = 4;
+  int64 count = 5;
+}
+
+message MetricTrend {
+  string sensor_id = 1;
+  string metric = 2;
+  string unit = 3;
+  repeated TrendPoint points = 4;
+}
+
+message TrendsRequest {
+  AnalyticsQuery query = 1;
+  string interval = 2;
+  string metric = 3;
+}
+
+message TrendsResponse {
+  string interval = 1;
+  repeated MetricTrend series = 2;
+}
+
+message Alert {
+  string id = 1;
+  string type = 2;
+  string severity = 3;
+  string sensor_id = 4;
+  string device_id = 5;
+  string metric = 6;
+  double value = 7;
+  double threshold = 8;
+  string comparator = 9;
+  string message = 10;
+  google.protobuf.Timestamp recorded_at = 11;
+}
+
+message AlertsResponse {
+  repeated Alert alerts = 1;
+}
+
+message ReportSection {
+  string title = 1;
+  string body = 2;
+}
+
+message Report {
+  string id = 1;
+  string title = 2;
+  string generated_by = 3;
+  google.protobuf.Timestamp generated_at = 4;
+  google.protobuf.Timestamp from_time = 5;
+  google.protobuf.Timestamp to_time = 6;
+  SummaryResponse summary = 7;
+  repeated SensorStats sensor_stats = 8;
+  repeated MetricTrend trends = 9;
+  repeated Alert alerts = 10;
+  repeated ReportSection sections = 11;
+}
+
+message GenerateReportRequest {
+  string title = 1;
+  string generated_by = 2;
+  AnalyticsQuery query = 3;
+  string interval = 4;
+}
+
+message GetReportRequest {
+  string id = 1;
+}
+
+message ListReportsRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message ListReportsResponse {
+  repeated Report reports = 1;
+  string next_page_token = 2;
+}
