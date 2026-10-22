@@ -1,6 +1,6 @@
 # Smart Farmland
 
-Smart Farmland is the local integration project for the independently maintained service repositories in this workspace. It owns service orchestration and end-to-end checks; each service fork owns its implementation, Dockerfile, API, and service documentation.
+Smart Farmland contains the complete source for the API gateway and all backend services, alongside local orchestration and end-to-end checks. Each service is kept in its own folder under `services/`, with its Dockerfile, API contracts, and service documentation. The Docker Compose stack builds from these in-project folders and does not depend on sibling repositories.
 
 ## Included services
 
@@ -13,7 +13,7 @@ Smart Farmland is the local integration project for the independently maintained
 | PostgreSQL | Auth-service persistence | `localhost:5432` |
 | MongoDB | Telemetry and BI persistence | `localhost:27017` |
 
-The web dashboard and sensor firmware are not present in these repositories yet. The gateway and backend services are runnable without them.
+The web dashboard and sensor firmware are not included in this project yet. The gateway and backend services are runnable without them.
 
 ## Start the complete local stack
 
@@ -51,11 +51,11 @@ python3 scripts/smoke_test.py
 
 The smoke test prompts for the admin password unless `ADMIN_PASSWORD` is set in the process environment. Use `--username` if `.env` configures a non-default admin name. It verifies readiness, signs in through the gateway, checks the authenticated profile, ingests a unique reading, and confirms BI can analyze that reading through telemetry. It adds one uniquely identified test reading to the local database.
 
-## Service repositories
+## Service source
 
-- [API gateway](../smart-farmland-api-gateway/README.md)
-- [Auth service](../smart-farmland-auth-service/README.md)
-- [BI service](../smart-farmland-bi-service/README.md)
-- [Telemetry service](../smart-farmland-telemetry-service/README.md)
+- [API gateway](services/api-gateway/README.md)
+- [Auth service](services/auth-service/README.md)
+- [BI service](services/bi-service/README.md)
+- [Telemetry service](services/telemetry-service/README.md)
 
-The service repositories remain independent Git repositories. Do not copy service implementation files into this integration directory; change each service in its owning repository.
+All four service implementations are present in this project and are the source used by `docker compose`. The original service forks may still be maintained separately, but they are not required to build or run this stack.
