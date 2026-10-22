@@ -1,0 +1,11 @@
+**/.env
+**/.env.*
+**/sample.env
+**/.git
+**/.gitignore
+**/.dockerignore
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/venv/
+**/gen/
