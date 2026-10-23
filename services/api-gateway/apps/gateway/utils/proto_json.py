@@ -142,6 +142,20 @@ def alert(msg) -> dict:
     }
 
 
+def notification(msg) -> dict:
+    return {
+        "id": msg.id,
+        "title": msg.title,
+        "body": msg.body,
+        "data": dict(msg.data),
+        "delivery_status": msg.delivery_status,
+        "sent_count": msg.sent_count,
+        "failed_count": msg.failed_count,
+        "created_at": ts_to_iso(msg.created_at),
+        "read_at": ts_to_iso(msg.read_at),
+    }
+
+
 def summary(msg) -> dict:
     return {
         "reading_count": msg.reading_count,
