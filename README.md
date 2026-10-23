@@ -10,8 +10,9 @@ Smart Farmland contains the complete source for the API gateway and all backend 
 | Auth service | User login, JWT lifecycle, and identity verification | gRPC `localhost:50051` |
 | Telemetry service | Validated raw sensor readings and sensor catalog | gRPC `localhost:50052` |
 | BI service | Analytics and report generation from telemetry | gRPC `localhost:50053` |
+| Notification service | In-app notification history and Firebase Cloud Messaging push | gRPC `localhost:50054` |
 | PostgreSQL | Auth-service persistence | `localhost:5432` |
-| MongoDB | Telemetry and BI persistence | `localhost:27017` |
+| MongoDB | Telemetry, BI, and Notification persistence | `localhost:27017` |
 
 The web dashboard and sensor firmware are not included in this project yet. The gateway and backend services are runnable without them.
 
@@ -23,7 +24,7 @@ Requirements: Docker Engine and Docker Compose v2.20 or later.
 cp .env.example .env
 ```
 
-Edit `.env` before starting. Set a unique PostgreSQL password and keep `POSTGRES_PASSWORD` and the password in `SQLALCHEMY_DATABASE_URL` in sync (URL-encode reserved URL characters). Set a random `JWT_SECRET_KEY` of at least 32 characters and a strong `ADMIN_PASSWORD`. Keep `.env` local; it is ignored by Git.
+Edit `.env` before starting. Set a unique PostgreSQL password and keep `POSTGRES_PASSWORD` and the password in `SQLALCHEMY_DATABASE_URL` in sync (URL-encode reserved URL characters). Set a random `JWT_SECRET_KEY` of at least 32 characters and a strong `ADMIN_PASSWORD`. For FCM push delivery, set `FIREBASE_CREDENTIALS_FILE` to `./firebase-service-account.json` or another Firebase service-account JSON path; leave it blank to run in-app history without push delivery. Keep `.env` and Firebase credentials local; the default credential filename is ignored by Git.
 
 From this directory:
 
@@ -56,6 +57,7 @@ The smoke test prompts for the admin password unless `ADMIN_PASSWORD` is set in 
 - [API gateway](services/api-gateway/README.md)
 - [Auth service](services/auth-service/README.md)
 - [BI service](services/bi-service/README.md)
+- [Notification service](services/notification-service/README.md)
 - [Telemetry service](services/telemetry-service/README.md)
 
-All four service implementations are present in this project and are the source used by `docker compose`. The original service forks may still be maintained separately, but they are not required to build or run this stack.
+All five service implementations are present in this project and are the source used by `docker compose`. The original service forks may still be maintained separately, but they are not required to build or run this stack.
