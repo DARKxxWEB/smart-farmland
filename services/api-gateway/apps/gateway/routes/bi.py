@@ -1,16 +1,19 @@
 from datetime import datetime
+import logging
 
 import grpc
 from fastapi import APIRouter, Query, Request
 
 from bi.v1 import bi_pb2
 from grpc_clients import clients
+from notification.v1 import notification_pb2
 from schema._input import GenerateReportBody
 from utils import proto_json
 from utils.deps import ReadLimit, UserDep
 from utils.errors import grpc_http_error
 
 router = APIRouter(prefix="/api/v1/bi", tags=["bi"])
+logger = logging.getLogger(__name__)
 
 
 def _query(
@@ -69,7 +72,7 @@ async def trends(
 
 @router.get("/alerts")
 async def alerts(
-    _u=UserDep,
+    user=UserDep,
     _l=ReadLimit,
     device_id: str = "",
     sensor_id: str = "",
@@ -80,6 +83,31 @@ async def alerts(
         response = await clients.bi_stub.GetAlerts(_query(device_id, sensor_id, from_time, to_time))
     except grpc.aio.AioRpcError as e:
         raise grpc_http_error(e) from e
+    for alert in response.alerts:
+        if not alert.id:
+            continue
+        try:
+            await clients.notification_stub.CreateNotification(
+                notification_pb2.CreateNotificationRequest(
+                    user_id=user.user_id,
+                    title=f"{alert.severity.title()} farm alert",
+                    body=alert.message,
+                    source_id=alert.id,
+                    data={
+                        "type": "bi_alert",
+                        "alert_id": alert.id,
+                        "severity": alert.severity,
+                        "device_id": alert.device_id,
+                        "sensor_id": alert.sensor_id,
+                    },
+                )
+            )
+        except grpc.aio.AioRpcError as exc:
+            logger.warning(
+                "Could not publish BI alert %s as a notification: %s",
+                alert.id,
+                exc.details(),
+            )
     return {"items": [proto_json.alert(item) for item in response.alerts]}
 
 
