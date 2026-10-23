@@ -39,6 +39,17 @@ Ingest accepts a user Bearer token, or `Authorization: Device <DEVICE_INGEST_TOK
 | GET | `/api/v1/bi/reports` |
 | GET | `/api/v1/bi/reports/{id}` |
 
+Reading BI alerts also creates one deduplicated notification per alert for the authenticated user. Notifications are available through:
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| POST | `/api/v1/notifications/devices` | Register the current user's FCM device token |
+| DELETE | `/api/v1/notifications/devices` | Remove the current user's FCM device token |
+| GET | `/api/v1/notifications` | List history; supports `unread_only`, `page_size`, and `page_token` |
+| PATCH | `/api/v1/notifications/{notification_id}/read` | Mark a notification as read |
+
+Notification history is stored even when no device is registered. Firebase push requires `FIREBASE_CREDENTIALS_FILE` in the integration project's `.env`.
+
 ## Realtime
 
 `GET /api/v1/ws/telemetry?access_token=<jwt>` (or `Authorization: Bearer` on the upgrade).
@@ -48,7 +59,7 @@ After ingest, connected clients receive `{ "type": "reading", "data": ... }`. Sl
 ## Health
 
 - `GET /health` — process liveness
-- `GET /ready` — gRPC health of auth, telemetry, and BI
+- `GET /ready` — gRPC health of auth, telemetry, BI, and notification services
 
 ## Fake data
 
