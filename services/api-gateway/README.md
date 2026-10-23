@@ -13,7 +13,7 @@ cd apps/gateway
 python main.py
 ```
 
-The Auth, Telemetry, and BI gRPC services must be reachable at the configured targets.
+The Auth, Telemetry, BI, and Notification gRPC services must be reachable at the configured targets.
 
 ## Documentation
 
