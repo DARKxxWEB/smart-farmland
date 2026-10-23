@@ -7,14 +7,16 @@ Browser / device / importer
             |
             v
       FastAPI gateway
-       |     |     |
-      gRPC  gRPC  gRPC
-       |     |     |
-      Auth  Telemetry  BI
-       |       |       |
-    Postgres  MongoDB  MongoDB
-                    |
-                    +-- reads through Telemetry gRPC
+       |     |       |       |
+      gRPC  gRPC    gRPC    gRPC
+       |     |       |       |
+      Auth  Telemetry <---- BI
+       |       |               |
+    Postgres  MongoDB         MongoDB
+       |
+       +---------------- Notification
+                              |      |
+                           MongoDB  Firebase FCM
 ```
 
 ## Service boundaries
@@ -23,8 +25,9 @@ Browser / device / importer
 - **Auth** owns user identity, password verification, and access/refresh token behavior; PostgreSQL is its datastore.
 - **Telemetry** validates and stores the source-of-truth sensor readings in MongoDB.
 - **BI** reads telemetry through its versioned gRPC contract and owns derived analytics and report documents in MongoDB.
+- **Notification** owns device FCM tokens and per-user notification history in MongoDB, and sends push messages only through Firebase Cloud Messaging. The gateway routes authenticated alert reads and device registrations to it.
 - **This project** owns all service source under `services/`, local Compose orchestration, environment setup, and end-to-end validation. Each service retains its own implementation boundary, Dockerfile, and service-level documentation.
 
-Compose builds every service from its local `services/` folder, starts database dependencies before their services, and checks each gRPC/HTTP health endpoint before starting dependent services. Services communicate over their existing versioned gRPC contracts; Compose supplies the local network and service discovery. Local service ports bind to loopback only. The gRPC listeners use plaintext inside that network; do not expose it or these listeners to an untrusted network.
+Compose builds every service from its local `services/` folder, starts database dependencies before their services, and checks each gRPC/HTTP health endpoint before starting dependent services. Services communicate over their existing versioned gRPC contracts; Compose supplies the local network and service discovery. Local service ports bind to loopback only. The gRPC listeners use plaintext inside that network; do not expose it or these listeners to an untrusted network. Firebase credentials are optional for local startup and must be supplied through the ignored `FIREBASE_CREDENTIALS_FILE` setting; never commit service-account credentials.
 
 The current workspace does not contain the web application or device firmware. Device provisioning, deployment secrets, production TLS, and production orchestration remain separate release requirements.
