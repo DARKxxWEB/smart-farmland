@@ -15,6 +15,7 @@ CORS_ORIGINS = [
 AUTH_GRPC_TARGET = os.getenv("AUTH_GRPC_TARGET", "localhost:50051")
 TELEMETRY_GRPC_TARGET = os.getenv("TELEMETRY_GRPC_TARGET", "localhost:50052")
 BI_GRPC_TARGET = os.getenv("BI_GRPC_TARGET", "localhost:50053")
+NOTIFICATION_GRPC_TARGET = os.getenv("NOTIFICATION_GRPC_TARGET", "localhost:50054")
 
 REDIS_URL = os.getenv("REDIS_URL") or None
 INGEST_RATE_LIMIT = os.getenv("INGEST_RATE_LIMIT", "60/minute;1000/hour")

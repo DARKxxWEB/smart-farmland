@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from grpc_clients import clients
-from routes import auth, bi, health, telemetry, ws
+from routes import auth, bi, health, notifications, telemetry, ws
 from settings import CORS_ORIGINS, HTTP_HOST, HTTP_PORT
 from utils.errors import rate_limit_handler
 from utils.rate_limiter import RateLimitExceeded, limiter
@@ -48,6 +48,7 @@ app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(telemetry.router)
 app.include_router(bi.router)
+app.include_router(notifications.router)
 app.include_router(ws.router)
 
 
