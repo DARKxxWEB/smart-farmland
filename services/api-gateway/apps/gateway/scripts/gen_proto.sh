@@ -9,7 +9,8 @@ python -m grpc_tools.protoc \
   --grpc_python_out=gen \
   ../../proto/auth/v1/auth.proto \
   ../../proto/telemetry/v1/telemetry.proto \
-  ../../proto/bi/v1/bi.proto
+  ../../proto/bi/v1/bi.proto \
+  ../../proto/notification/v1/notification.proto
 
 find gen -type d -exec touch {}/__init__.py \;
 echo "Generated stubs in apps/gateway/gen"
