@@ -4,6 +4,7 @@ import logging
 import grpc
 
 from bi.v1 import bi_pb2, bi_pb2_grpc
+from services.assistant import AssistantError, FarmAssistant
 from services.bi import BIService
 from services.reports import ReportError, ReportStore
 from utils.time import from_timestamp, to_timestamp
@@ -145,6 +146,7 @@ def _report_msg(doc: dict, include_details: bool = True) -> bi_pb2.Report:
 class BIServicer(bi_pb2_grpc.BIServiceServicer):
     def __init__(self) -> None:
         self.service = BIService()
+        self.assistant = FarmAssistant(self.service)
 
     def _query_args(self, query):
         return dict(
@@ -204,4 +206,25 @@ class BIServicer(bi_pb2_grpc.BIServiceServicer):
         return bi_pb2.ListReportsResponse(
             reports=[_report_msg(doc, include_details=False) for doc in docs],
             next_page_token=token,
+        )
+
+    async def ChatAssistant(self, request, context):
+        try:
+            result = await self.assistant.chat(
+                message=request.message,
+                history=[
+                    {"role": item.role, "content": item.content}
+                    for item in request.history
+                ],
+            )
+        except AssistantError as exc:
+            code = {
+                "disabled": grpc.StatusCode.FAILED_PRECONDITION,
+                "invalid": grpc.StatusCode.INVALID_ARGUMENT,
+            }.get(exc.code, grpc.StatusCode.UNAVAILABLE)
+            await context.abort(code, str(exc))
+        return bi_pb2.AssistantChatResponse(
+            answer=result["answer"],
+            sources=result["sources"],
+            model=result["model"],
         )
