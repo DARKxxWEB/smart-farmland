@@ -38,6 +38,9 @@ Ingest accepts a user Bearer token, or `Authorization: Device <DEVICE_INGEST_TOK
 | POST | `/api/v1/bi/reports` |
 | GET | `/api/v1/bi/reports` |
 | GET | `/api/v1/bi/reports/{id}` |
+| POST | `/api/v1/bi/assistant/chat` | Authenticated AI-assisted RAG chat; limited by `AI_CHAT_RATE_LIMIT` |
+
+The assistant API accepts a `message` and up to eight previous user/assistant `history` turns. It returns an `answer`, evidence `sources`, and the model identifier. It requires an AvalAI-compatible model configuration in the BI service; when unset, the endpoint returns an explicit unavailable/disabled response without affecting other BI APIs.
 
 Reading BI alerts also creates one deduplicated notification per alert for the authenticated user. Notifications are available through:
 
