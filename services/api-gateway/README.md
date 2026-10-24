@@ -21,4 +21,4 @@ The Auth, Telemetry, BI, and Notification gRPC services must be reachable at the
 - [Gateway ownership and service boundaries](docs/architecture.md)
 - [Contributing](CONTRIBUTING.md)
 
-`tools/fake-data/` contains a CSV generator and importer that submit readings through the gateway.
+`tools/fake-data/` contains a synthetic CSV sample, generator, and importer that submit readings through the gateway. The integration project's [fake sensor data guide](../README.md#fake-sensor-data-for-dashboard-testing) explains how to import the sample with fresh timestamps.
