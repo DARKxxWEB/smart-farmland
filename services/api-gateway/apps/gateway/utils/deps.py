@@ -2,12 +2,19 @@ from fastapi import Depends, Header, HTTPException, Request
 
 from auth.v1 import auth_pb2
 from grpc_clients import clients
-from settings import AUTH_RATE_LIMIT, DEVICE_INGEST_TOKEN, INGEST_RATE_LIMIT, READ_RATE_LIMIT
+from settings import (
+    AI_CHAT_RATE_LIMIT,
+    AUTH_RATE_LIMIT,
+    DEVICE_INGEST_TOKEN,
+    INGEST_RATE_LIMIT,
+    READ_RATE_LIMIT,
+)
 from utils.errors import client_ip, grpc_http_error
 from utils.rate_limiter import limiter, parse_limits
 import grpc
 
 READ_LIMITS = parse_limits(READ_RATE_LIMIT)
+AI_CHAT_LIMITS = parse_limits(AI_CHAT_RATE_LIMIT)
 INGEST_LIMITS = parse_limits(INGEST_RATE_LIMIT)
 AUTH_LIMITS = parse_limits(AUTH_RATE_LIMIT)
 
@@ -18,6 +25,10 @@ async def limit_auth(request: Request) -> None:
 
 async def limit_read(request: Request) -> None:
     await limiter.check("read", client_ip(request), READ_LIMITS)
+
+
+async def limit_ai_chat(request: Request) -> None:
+    await limiter.check("ai_chat", client_ip(request), AI_CHAT_LIMITS)
 
 
 async def limit_ingest(request: Request) -> None:
@@ -68,4 +79,5 @@ UserDep = Depends(current_user)
 IngestDep = Depends(ingest_principal)
 AuthLimit = Depends(limit_auth)
 ReadLimit = Depends(limit_read)
+AiChatLimit = Depends(limit_ai_chat)
 IngestLimit = Depends(limit_ingest)
