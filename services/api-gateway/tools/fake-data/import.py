@@ -8,6 +8,7 @@ import csv
 import os
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
@@ -33,6 +34,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--password", default=os.getenv("IMPORT_PASSWORD", ""))
     parser.add_argument("--batch-size", type=int, default=100)
     parser.add_argument("--retries", type=int, default=4)
+    parser.add_argument(
+        "--shift-to-now",
+        action="store_true",
+        help="Shift all reading timestamps so the latest sample is imported now.",
+    )
     return parser.parse_args()
 
 
@@ -52,6 +58,29 @@ def row_to_reading(row: dict) -> dict | None:
         "measurements": measurements,
         "source": (row.get("source") or "csv_import").strip() or "csv_import",
     }
+
+
+def shift_readings_to_now(readings: list[dict]) -> None:
+    timestamps = [
+        datetime.fromisoformat(item["recorded_at"].replace("Z", "+00:00"))
+        for item in readings
+    ]
+    if not timestamps:
+        return
+    latest = max(
+        timestamp.replace(tzinfo=timezone.utc)
+        if timestamp.tzinfo is None
+        else timestamp.astimezone(timezone.utc)
+        for timestamp in timestamps
+    )
+    offset = datetime.now(timezone.utc) - latest
+    for item, timestamp in zip(readings, timestamps):
+        timestamp = (
+            timestamp.replace(tzinfo=timezone.utc)
+            if timestamp.tzinfo is None
+            else timestamp.astimezone(timezone.utc)
+        )
+        item["recorded_at"] = (timestamp + offset).isoformat().replace("+00:00", "Z")
 
 
 def login(client: httpx.Client, gateway: str, username: str, password: str) -> str:
@@ -103,6 +132,9 @@ def main() -> None:
             reading = row_to_reading(row)
             if reading:
                 readings.append(reading)
+
+    if args.shift_to_now:
+        shift_readings_to_now(readings)
 
     url = f"{args.gateway.rstrip('/')}/api/v1/telemetry/readings/batch"
     accepted = duplicates = rejected = 0
