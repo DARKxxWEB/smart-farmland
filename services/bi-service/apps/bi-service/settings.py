@@ -18,6 +18,11 @@ MAX_PAGE_SIZE = int(os.getenv("MAX_PAGE_SIZE", "100"))
 SILENCE_MINUTES = int(os.getenv("SILENCE_MINUTES", "30"))
 DEFAULT_INTERVAL = os.getenv("DEFAULT_INTERVAL", "hour")
 
+AVALAI_API_KEY = os.getenv("AVALAI_API_KEY", "")
+AVALAI_BASE_URL = os.getenv("AVALAI_BASE_URL", "https://api.avalai.ir/v1")
+AVALAI_MODEL = os.getenv("AVALAI_MODEL", "gpt-4o-mini")
+AI_ASSISTANT_ENABLED = os.getenv("AI_ASSISTANT_ENABLED", "true").lower() == "true"
+
 MOISTURE_LOW = float(os.getenv("MOISTURE_LOW", "20"))
 MOISTURE_HIGH = float(os.getenv("MOISTURE_HIGH", "80"))
 NITROGEN_LOW = float(os.getenv("NITROGEN_LOW", "20"))
