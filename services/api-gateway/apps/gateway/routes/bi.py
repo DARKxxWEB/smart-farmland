@@ -7,9 +7,9 @@ from fastapi import APIRouter, Query, Request
 from bi.v1 import bi_pb2
 from grpc_clients import clients
 from notification.v1 import notification_pb2
-from schema._input import GenerateReportBody
+from schema._input import AssistantChatBody, GenerateReportBody
 from utils import proto_json
-from utils.deps import ReadLimit, UserDep
+from utils.deps import AiChatLimit, ReadLimit, UserDep
 from utils.errors import grpc_http_error
 
 router = APIRouter(prefix="/api/v1/bi", tags=["bi"])
@@ -26,6 +26,26 @@ def _query(
     proto_json.apply_timestamp(query.from_time, from_time)
     proto_json.apply_timestamp(query.to_time, to_time)
     return query
+
+
+@router.post("/assistant/chat")
+async def assistant_chat(body: AssistantChatBody, _u=UserDep, _l=AiChatLimit):
+    grpc_request = bi_pb2.AssistantChatRequest(
+        message=body.message,
+        history=[
+            bi_pb2.AssistantChatMessage(role=item.role, content=item.content)
+            for item in body.history
+        ],
+    )
+    try:
+        response = await clients.bi_stub.ChatAssistant(grpc_request, timeout=55)
+    except grpc.aio.AioRpcError as e:
+        raise grpc_http_error(e) from e
+    return {
+        "answer": response.answer,
+        "sources": list(response.sources),
+        "model": response.model,
+    }
 
 
 @router.get("/summary")
