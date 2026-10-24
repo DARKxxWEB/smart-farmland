@@ -21,6 +21,15 @@ Readings are streamed from telemetry. Reports are stored in MongoDB database `bi
 | `GetAlerts` | Threshold breaches and silent sensors |
 | `GenerateReport` | Persist a full report document |
 | `ListReports` / `GetReport` | Retrieve stored reports |
+| `ChatAssistant` | On-demand, tool-using RAG assistant for farm data and local metric guidance |
+
+## AI farm assistant
+
+The assistant runs only when a chat request is made; dashboard summary and alert APIs remain deterministic and do not call a model. It uses the OpenAI-compatible Chat Completions interface, asks the model to select among bounded BI tools (live summary, alerts, trends, and local guide retrieval), and returns the model answer with the sources used. Local guide retrieval uses a small in-process text index rather than a vector database, which keeps the single-user deployment lightweight. It does not train a model or write AI output back into telemetry.
+
+Set `AI_ASSISTANT_ENABLED`, `AVALAI_API_KEY`, `AVALAI_BASE_URL`, and `AVALAI_MODEL`. The default API base URL is `https://api.avalai.ir/v1`; confirm available model IDs and any provider-specific compatibility details in the [AvalAI documentation](https://avalai.ir/). Never commit the API key. If no key is set, the assistant endpoint explicitly reports that it is unavailable; all existing BI features continue to work.
+
+When chat is used, the user's message and only the requested tool results (which can include sensor/device identifiers and measurements) are sent to the configured external model provider. Do not send personal or sensitive information in a chat prompt. Replies are generated guidance, not agronomic prescriptions; AI tool use is bounded and the service's existing thresholds remain the source of truth for alerts. Gateway chat requests are rate-limited by `AI_CHAT_RATE_LIMIT` (default `10/hour`).
 
 ## Default thresholds
 
