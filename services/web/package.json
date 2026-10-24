@@ -1,0 +1,27 @@
+{
+  "name": "smart-farmland-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "NODE_ENV=development node server.mjs",
+    "build": "vue-tsc --noEmit && vite build",
+    "start": "NODE_ENV=production node server.mjs"
+  },
+  "dependencies": {
+    "@fontsource/vazirmatn": "^5.1.1",
+    "@inertiajs/vue3": "^2.0.17",
+    "express": "^5.1.0",
+    "http-proxy-middleware": "^3.0.3",
+    "@lucide/vue": "^1.61.0",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^5.2.3",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2",
+    "vue-tsc": "^2.2.8"
+  }
+}
