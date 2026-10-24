@@ -101,6 +101,10 @@ services:
       GRPC_PORT: 50053
       GRPC_REFLECTION: "false"
       TELEMETRY_GRPC_TARGET: telemetry-service:50052
+      AI_ASSISTANT_ENABLED: ${AI_ASSISTANT_ENABLED:-true}
+      AVALAI_API_KEY: ${AVALAI_API_KEY:-}
+      AVALAI_BASE_URL: ${AVALAI_BASE_URL:-https://api.avalai.ir/v1}
+      AVALAI_MODEL: ${AVALAI_MODEL:-gpt-4o-mini}
     ports:
       - "127.0.0.1:50053:50053"
     depends_on:
@@ -178,6 +182,30 @@ services:
         - python
         - -c
         - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  web:
+    build:
+      context: ./services/web
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      API_GATEWAY_URL: http://gateway:8000
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      gateway:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"
       interval: 10s
       timeout: 5s
       retries: 10
