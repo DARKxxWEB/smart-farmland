@@ -1,0 +1,54 @@
+@import "@fontsource/vazirmatn/400.css";
+@import "@fontsource/vazirmatn/500.css";
+@import "@fontsource/vazirmatn/600.css";
+@import "@fontsource/vazirmatn/700.css";
+
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #17231d;
+  --color-forest: #1d5c43;
+  --color-leaf: #77a96b;
+  --color-paper: #f5f7f1;
+  --color-line: #e6ebe2;
+  --font-sans: "Vazirmatn", sans-serif;
+  --shadow-card: 0 12px 35px rgba(33, 59, 42, 0.06);
+}
+
+:root {
+  font-family: "Vazirmatn", sans-serif;
+  color: #17231d;
+  background: #f5f7f1;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-optical-sizing: auto;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 3px solid #8ab58a;
+  outline-offset: 3px;
+}
+
+::selection {
+  color: #fff;
+  background: #1d5c43;
+}
