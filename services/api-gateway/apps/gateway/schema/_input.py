@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -55,3 +56,13 @@ class GenerateReportBody(BaseModel):
     from_time: datetime | None = None
     to_time: datetime | None = None
     interval: str = "hour"
+
+
+class AssistantChatMessageBody(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=2_000)
+
+
+class AssistantChatBody(BaseModel):
+    message: str = Field(min_length=1, max_length=1_200)
+    history: list[AssistantChatMessageBody] = Field(default_factory=list, max_length=8)
