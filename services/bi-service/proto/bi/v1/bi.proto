@@ -13,6 +13,23 @@ service BIService {
   rpc GenerateReport(GenerateReportRequest) returns (Report);
   rpc GetReport(GetReportRequest) returns (Report);
   rpc ListReports(ListReportsRequest) returns (ListReportsResponse);
+  rpc ChatAssistant(AssistantChatRequest) returns (AssistantChatResponse);
+}
+
+message AssistantChatMessage {
+  string role = 1;
+  string content = 2;
+}
+
+message AssistantChatRequest {
+  string message = 1;
+  repeated AssistantChatMessage history = 2;
+}
+
+message AssistantChatResponse {
+  string answer = 1;
+  repeated string sources = 2;
+  string model = 3;
 }
 
 message AnalyticsQuery {
