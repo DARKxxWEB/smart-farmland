@@ -21,6 +21,7 @@ REDIS_URL = os.getenv("REDIS_URL") or None
 INGEST_RATE_LIMIT = os.getenv("INGEST_RATE_LIMIT", "60/minute;1000/hour")
 AUTH_RATE_LIMIT = os.getenv("AUTH_RATE_LIMIT", "10/minute;100/hour")
 READ_RATE_LIMIT = os.getenv("READ_RATE_LIMIT", "120/minute")
+AI_CHAT_RATE_LIMIT = os.getenv("AI_CHAT_RATE_LIMIT", "10/hour")
 
 DEVICE_INGEST_TOKEN = os.getenv("DEVICE_INGEST_TOKEN", "")
 WS_QUEUE_SIZE = int(os.getenv("WS_QUEUE_SIZE", "100"))
