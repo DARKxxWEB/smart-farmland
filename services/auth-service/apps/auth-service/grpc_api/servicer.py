@@ -10,9 +10,9 @@ from pydantic import ValidationError
 from auth.v1 import auth_pb2, auth_pb2_grpc
 from db.engine import SessionLocal
 from db.models import RoleEnum, UserModel
-from schema._input import LoginInput, ChangePasswordInput
+from schema._input import ChangePasswordInput, LoginInput
 from schema.output import TokenOutput
-from services.auth import AuthService, AuthError
+from services.auth import AuthError, AuthService
 from settings import LOGIN_RATE_LIMIT, REFRESH_RATE_LIMIT
 from utils.rate_limiter import RateLimitExceeded, limiter, parse_limits
 
@@ -59,7 +59,7 @@ def handle_errors(func):
             await context.abort(grpc.StatusCode.UNAUTHENTICATED, str(e))
         except PermissionError as e:
             await context.abort(grpc.StatusCode.PERMISSION_DENIED, str(e))
-        except ValueError as e:  # شامل pydantic.ValidationError
+        except ValueError as e:
             await context.abort(
                 grpc.StatusCode.INVALID_ARGUMENT, _first_validation_message(e)
             )
