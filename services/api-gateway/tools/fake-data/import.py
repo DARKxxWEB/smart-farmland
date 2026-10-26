@@ -34,6 +34,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=100)
     parser.add_argument("--retries", type=int, default=4)
     parser.add_argument(
+        "--marker-file",
+        type=Path,
+        help="Write this file after a successful import and skip future imports while it exists.",
+    )
+    parser.add_argument(
         "--shift-to-now",
         action="store_true",
         help="Shift all reading timestamps so the latest sample is imported now.",
@@ -118,6 +123,9 @@ def post_batch(client: httpx.Client, url: str, headers: dict, batch: list[dict],
 
 def main() -> None:
     args = parse_args()
+    if args.marker_file and args.marker_file.exists():
+        print(f"Sample data already imported; skipping (marker: {args.marker_file})")
+        return
     if not args.password:
         print("IMPORT_PASSWORD or --password is required", file=sys.stderr)
         sys.exit(1)
@@ -131,6 +139,10 @@ def main() -> None:
             reading = row_to_reading(row)
             if reading:
                 readings.append(reading)
+
+    if not readings:
+        print("CSV file contains no readings", file=sys.stderr)
+        sys.exit(1)
 
     if args.shift_to_now:
         shift_readings_to_now(readings)
@@ -151,6 +163,19 @@ def main() -> None:
                 f"accepted={result.get('accepted')} duplicates={result.get('duplicates')} "
                 f"rejected={result.get('rejected')}"
             )
+            if result.get("errors"):
+                print(f"batch errors: {result['errors']}", file=sys.stderr)
+
+    if rejected or accepted + duplicates != len(readings):
+        raise RuntimeError(
+            f"Import incomplete: expected {len(readings)} readings, "
+            f"accepted={accepted}, duplicates={duplicates}, rejected={rejected}"
+        )
+
+    if args.marker_file:
+        args.marker_file.parent.mkdir(parents=True, exist_ok=True)
+        args.marker_file.write_text("completed\n", encoding="utf-8")
+
     print(
         f"Imported {len(readings)} rows "
         f"(accepted={accepted}, duplicates={duplicates}, rejected={rejected})"
