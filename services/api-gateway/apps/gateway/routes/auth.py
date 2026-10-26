@@ -15,7 +15,10 @@ router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 async def login(body: LoginBody, request: Request, _: None = AuthLimit):
     try:
         response = await clients.auth_stub.Login(
-            auth_pb2.LoginRequest(username=body.username, password=body.password),
+            auth_pb2.LoginRequest(
+                username=body.username,
+                password=body.password,
+            ),
             metadata=clients.metadata(ip=client_ip(request)),
         )
     except grpc.aio.AioRpcError as e:
