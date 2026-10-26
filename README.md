@@ -35,7 +35,7 @@ From this directory:
 docker compose up --build --wait
 ```
 
-The initial admin account is created on first startup when the auth database is empty. To inspect readiness:
+The initial admin account is created on first startup when the auth database is empty. Compose then imports the bundled synthetic sensor sample with timestamps shifted to startup time. The web service waits until this import succeeds, so the dashboard has recent sample data when it first opens. The importer records its completion in a named volume and does not add another batch on later starts. To inspect readiness:
 
 ```bash
 docker compose ps
@@ -58,7 +58,9 @@ The smoke test prompts for the admin password unless `ADMIN_PASSWORD` is set in 
 
 ## Fake sensor data for dashboard testing
 
-Until physical sensors are connected, the repository includes a clearly synthetic CSV sample for device `E1` with four moisture sensors and one NPK sensor. It includes normal variation, a few threshold alerts, and gaps in one sensor's readings so the dashboard and BI alerts have representative data to display. Import it into the local database with the configured admin password:
+Until physical sensors are connected, the repository includes a clearly synthetic CSV sample for device `E1` with four moisture sensors and one NPK sensor. It includes normal variation, a few threshold alerts, and gaps in one sensor's readings so the dashboard and BI alerts have representative data to display. The complete local Compose stack imports this sample automatically on its first startup. The import uses the configured admin credentials, shifts the sample's time range to startup time, and saves its completion state in `sample_data_import_state`.
+
+To import a generated or alternate CSV manually, use the configured admin password:
 
 ```bash
 export IMPORT_USERNAME=admin
@@ -79,7 +81,7 @@ python3 services/api-gateway/tools/fake-data/generate.py \
   --output services/api-gateway/tools/fake-data/sample-readings.csv
 ```
 
-These readings are synthetic, use `source=csv_import`, and are written to the same local telemetry database as other data. Re-importing the exact sample without `--shift-to-now` is safe because duplicate device/sensor/timestamp readings are ignored. Each import with `--shift-to-now` creates a fresh set of timestamps, so avoid repeating it unless you want another demo batch. Before testing with real devices on the same `E1` identifiers, use a separate clean local database or choose different device IDs so demo and real readings are not mixed.
+These readings are synthetic, use `source=csv_import`, and are written to the same local telemetry database as other data. Re-importing the exact sample without `--shift-to-now` is safe because duplicate device/sensor/timestamp readings are ignored. Each manual import with `--shift-to-now` creates a fresh set of timestamps, so avoid repeating it unless you want another demo batch. Before testing with real devices on the same `E1` identifiers, use a separate clean local database or choose different device IDs so demo and real readings are not mixed.
 
 ## Service source
 
