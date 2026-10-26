@@ -5,8 +5,8 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_DB: auth_db
-      POSTGRES_USER: ${POSTGRES_USER:-smart_farmland}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in smart-farmland/.env}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -41,10 +41,10 @@ services:
       context: ./services/auth-service
       dockerfile: apps/auth-service/Dockerfile
     environment:
-      SQLALCHEMY_DATABASE_URL: ${SQLALCHEMY_DATABASE_URL:?Set SQLALCHEMY_DATABASE_URL in smart-farmland/.env}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?Set JWT_SECRET_KEY in smart-farmland/.env}
-      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in smart-farmland/.env}
+      SQLALCHEMY_DATABASE_URL: ${SQLALCHEMY_DATABASE_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
       GRPC_HOST: 0.0.0.0
       GRPC_PORT: 50051
       GRPC_REFLECTION: "false"
@@ -101,10 +101,10 @@ services:
       GRPC_PORT: 50053
       GRPC_REFLECTION: "false"
       TELEMETRY_GRPC_TARGET: telemetry-service:50052
-      AI_ASSISTANT_ENABLED: ${AI_ASSISTANT_ENABLED:-true}
-      AVALAI_API_KEY: ${AVALAI_API_KEY:-}
-      AVALAI_BASE_URL: ${AVALAI_BASE_URL:-https://api.avalai.ir/v1}
-      AVALAI_MODEL: ${AVALAI_MODEL:-gpt-4o-mini}
+      AI_ASSISTANT_ENABLED: ${AI_ASSISTANT_ENABLED}
+      AVALAI_API_KEY: ${AVALAI_API_KEY}
+      AVALAI_BASE_URL: ${AVALAI_BASE_URL}
+      AVALAI_MODEL: ${AVALAI_MODEL}
     ports:
       - "127.0.0.1:50053:50053"
     depends_on:
@@ -163,8 +163,8 @@ services:
       TELEMETRY_GRPC_TARGET: telemetry-service:50052
       BI_GRPC_TARGET: bi-service:50053
       NOTIFICATION_GRPC_TARGET: notification-service:50054
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
-      DEVICE_INGEST_TOKEN: ${DEVICE_INGEST_TOKEN:-}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      DEVICE_INGEST_TOKEN: ${DEVICE_INGEST_TOKEN}
     ports:
       - "127.0.0.1:8000:8000"
     depends_on:
@@ -187,6 +187,31 @@ services:
       retries: 10
       start_period: 10s
 
+  sample-data-importer:
+    build:
+      context: ./services/api-gateway
+      dockerfile: apps/gateway/Dockerfile
+    command:
+      - python
+      - /app/tools/fake-data/import.py
+      - --file
+      - /app/tools/fake-data/sample-readings.csv
+      - --shift-to-now
+      - --batch-size
+      - "500"
+      - --marker-file
+      - /state/sample-data-imported
+    environment:
+      GATEWAY_URL: http://gateway:8000
+      IMPORT_USERNAME: ${ADMIN_USERNAME}
+      IMPORT_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      - sample_data_import_state:/state
+    depends_on:
+      gateway:
+        condition: service_healthy
+    restart: "no"
+
   web:
     build:
       context: ./services/web
@@ -200,6 +225,8 @@ services:
     depends_on:
       gateway:
         condition: service_healthy
+      sample-data-importer:
+        condition: service_completed_successfully
     healthcheck:
       test:
         - CMD
@@ -214,3 +241,4 @@ services:
 volumes:
   mongo_data:
   postgres_data:
+  sample_data_import_state:

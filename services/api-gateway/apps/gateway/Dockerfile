@@ -8,6 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY proto /proto
 COPY apps/gateway/ .
+COPY tools/fake-data /app/tools/fake-data
 
 RUN mkdir -p gen && python -m grpc_tools.protoc \
     -I /proto --python_out=gen --grpc_python_out=gen \
