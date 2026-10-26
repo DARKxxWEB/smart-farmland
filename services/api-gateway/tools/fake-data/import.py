@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-"""Import CSV readings through the gateway ingest API."""
 
 from __future__ import annotations
 
