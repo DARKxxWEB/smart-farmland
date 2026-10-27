@@ -8,3 +8,7 @@ __pycache__/
 .venv/
 venv/
 firebase-service-account*.json
+services/android/.gradle/
+services/android/.kotlin/
+services/android/local.properties
+services/android/**/build/
