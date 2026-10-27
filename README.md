@@ -7,6 +7,7 @@ Smart Farmland contains the complete source for the API gateway and all backend 
 | Service | Responsibility | Local endpoint |
 | --- | --- | --- |
 | Web | Persian RTL dashboard and Inertia page server | `http://localhost:3000` |
+| Android | Native Kotlin app for farm monitoring and account management | Android app |
 | API gateway | REST and WebSocket client API; gRPC client for backend services | `http://localhost:8000` |
 | Auth service | User login, JWT lifecycle, and identity verification | gRPC `localhost:50051` |
 | Telemetry service | Validated raw sensor readings and sensor catalog | gRPC `localhost:50052` |
@@ -86,6 +87,7 @@ These readings are synthetic, use `source=csv_import`, and are written to the sa
 ## Service source
 
 - [Web dashboard](services/web/README.md)
+- [Android app](services/android/README.md)
 - [API gateway](services/api-gateway/README.md)
 - [Auth service](services/auth-service/README.md)
 - [BI service](services/bi-service/README.md)
