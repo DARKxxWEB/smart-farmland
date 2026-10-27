@@ -26,7 +26,7 @@ Requirements: Docker Engine and Docker Compose v2.20 or later.
 cp .env.example .env
 ```
 
-Edit `.env` before starting. Set a unique PostgreSQL password and keep `POSTGRES_PASSWORD` and the password in `SQLALCHEMY_DATABASE_URL` in sync (URL-encode reserved URL characters). Set a random `JWT_SECRET_KEY` of at least 32 characters and a strong `ADMIN_PASSWORD`. For FCM push delivery, set `FIREBASE_CREDENTIALS_FILE` to `./firebase-service-account.json` or another Firebase service-account JSON path; leave it blank to run in-app history without push delivery. Keep `.env` and Firebase credentials local; the default credential filename is ignored by Git.
+Edit `.env` before starting. Set a unique PostgreSQL password and keep `POSTGRES_PASSWORD` and the password in `SQLALCHEMY_DATABASE_URL` in sync (URL-encode reserved URL characters). Set a unique MongoDB username and password using URI-safe characters; these initialize MongoDB's root user and authenticate all services. Set a random `JWT_SECRET_KEY` of at least 32 characters and a strong `ADMIN_PASSWORD`. For FCM push delivery, set `FIREBASE_CREDENTIALS_FILE` to `./firebase-service-account.json` or another Firebase service-account JSON path; leave it blank to run in-app history without push delivery. Keep `.env` and Firebase credentials local; the default credential filename is ignored by Git.
 
 To enable the on-demand AI farm assistant, configure `AVALAI_API_KEY` and verify `AVALAI_MODEL` against your AvalAI account. The key is read only by BI service and must remain private. Set `AI_ASSISTANT_ENABLED=false` to disable assistant requests; the deterministic BI dashboard remains available either way. Sensor data used by an assistant answer is sent to the configured external model provider.
 
@@ -37,6 +37,16 @@ docker compose up --build --wait
 ```
 
 The initial admin account is created on first startup when the auth database is empty. Compose then imports the bundled synthetic sensor sample with timestamps shifted to startup time. The web service waits until this import succeeds, so the dashboard has recent sample data when it first opens. The importer records its completion in a named volume and does not add another batch on later starts. To inspect readiness:
+
+MongoDB's root account is created automatically when its data volume is initialized. If you already have a MongoDB volume from an earlier unauthenticated setup, preserve it and create the first root account before starting the rest of the stack:
+
+```bash
+docker compose up -d mongo
+docker compose exec mongo mongosh --quiet --eval 'db.getSiblingDB("admin").createUser({user: process.env.MONGO_INITDB_ROOT_USERNAME, pwd: process.env.MONGO_INITDB_ROOT_PASSWORD, roles: [{role: "root", db: "admin"}]})'
+docker compose up --build --wait
+```
+
+Run the account-creation command only for an existing volume with no MongoDB users. New volumes are initialized automatically.
 
 ```bash
 docker compose ps
